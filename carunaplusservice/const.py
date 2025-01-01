@@ -1,0 +1,11 @@
+HTTP_READ_TIMEOUT = 30
+BASE_URL = "https://plus.caruna.fi"
+AUTH_URL = "https://authentication2.caruna.fi"
+LOGIN_API = f"{BASE_URL}/api/authorization/login"
+TOKEN_API = f"{BASE_URL}/api/authorization/token"
+LOGOUT_URL = f"{AUTH_URL}/portal/"
+CARUNAPLUS_API_URL_V16 = "https://api.omahelen.fi/v16"
+MEASUREMENTS_ENDPOINT = "/measurements/electricity"
+TRANSFER_ENDPOINT = "/measurements/electricity-transfer"
+SPOT_PRICES_ENDPOINT = MEASUREMENTS_ENDPOINT + "/spot-prices"
+CONTRACT_ENDPOINT = "/contract/list"
