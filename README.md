@@ -1,9 +1,9 @@
 # Caruna Plus Client
 
-## Overview
-
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate/?hosted_button_id=92TWRV5CY5NG6)
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/TimotheosOfLifeHill)
+
+## Overview
 
 Caruna Plus is a service provided by Caruna, a Finnish electricity distribution company. The service offers customers access to detailed information about their electricity consumption, contracts, and other related data through an online portal and API. The Caruna Plus Client project in your workspace is designed to interact with the Caruna Plus API, allowing users to retrieve and manage their electricity data programmatically.
 
@@ -23,7 +23,7 @@ Tip: in order to list all the commands within the CLI, enter `?`
 
 | Function name                 | What it does |
 |-------------------------------|--------------|
-| get_api_access_token          | Get the access token to the Oma Helen API. With the token, you can make manual curl requests to the API |
+| get_api_access_token          | Get the access token to the Caruna Plus API. With the token, you can make manual curl requests to the API |
 
 ### Installing from sources and running the project for local development
 

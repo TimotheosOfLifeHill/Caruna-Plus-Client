@@ -1,22 +1,26 @@
+import json
+import logging
 from cmd import Cmd
 from datetime import date, datetime, timedelta
 from getpass import getpass
-import json
+
 import keyring
-import logging
 
 from .api_client import CarunaPlusApiClient
 from .price_client import CarunaPlusPriceClient
-from .utils import get_month_date_range_by_date
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 def _json_serializer(value):
     if isinstance(value, datetime):
         return value.strftime("%Y%m%d%H%M%S")
     else:
         return value.__dict__
+
 
 class CarunaPlusCLIPrompt(Cmd):
     prompt = "caruna-plus-cli> "
@@ -53,9 +57,9 @@ class CarunaPlusCLIPrompt(Cmd):
 
     def _parse_dates(self, input):
         try:
-            start_date_str, end_date_str = str(input).split(' ')
-            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            start_date_str, end_date_str = str(input).split(" ")
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
             if start_date > end_date:
                 raise ValueError("Start date must be before end date")
             return start_date, end_date
@@ -63,7 +67,6 @@ class CarunaPlusCLIPrompt(Cmd):
             logging.error(f"Date parsing error: {e}")
             print("Please provide proper start and end dates in format 'YYYY-mm-dd'")
             return None, None
-
 
     def do_calculate_the_impact_of_usage_between_dates(self, input=None):
         """Calculate the impact of usage for Caruna Plus Smart Electricity Guarantee contract between a start date and an end date"""
@@ -76,7 +79,9 @@ class CarunaPlusCLIPrompt(Cmd):
             return
 
         try:
-            impact = self.api_client.calculate_impact_of_usage_between_dates(start_date, end_date)
+            impact = self.api_client.calculate_impact_of_usage_between_dates(
+                start_date, end_date
+            )
             print(impact)
         except Exception as e:
             logging.error(f"Error calculating impact of usage: {e}")
@@ -86,7 +91,11 @@ class CarunaPlusCLIPrompt(Cmd):
         try:
             end_date = datetime.today().date()
             start_date = end_date - timedelta(days=5)
-            latest_hourly_monthly_measurement = self.api_client.get_hourly_measurements_between_dates(start_date, end_date)
+            latest_hourly_monthly_measurement = (
+                self.api_client.get_hourly_measurements_between_dates(
+                    start_date, end_date
+                )
+            )
             latest_measurement_json = latest_hourly_monthly_measurement
             print(latest_measurement_json)
         except Exception as e:
@@ -103,8 +112,14 @@ class CarunaPlusCLIPrompt(Cmd):
             return
 
         try:
-            monthly_measurements = self.api_client.get_hourly_measurements_between_dates(start_date, end_date)
-            monthly_measurements_json = json.dumps(monthly_measurements, default=_json_serializer, indent=2)
+            monthly_measurements = (
+                self.api_client.get_hourly_measurements_between_dates(
+                    start_date, end_date
+                )
+            )
+            monthly_measurements_json = json.dumps(
+                monthly_measurements, default=_json_serializer, indent=2
+            )
             print(monthly_measurements_json)
         except Exception as e:
             logging.error(f"Error getting monthly measurements: {e}")
@@ -113,8 +128,12 @@ class CarunaPlusCLIPrompt(Cmd):
         """Get the monthly electricity measurements of the on-going year as JSON"""
         try:
             year = date.today().year
-            monthly_measurements = self.api_client.get_monthly_measurements_by_year(year)
-            monthly_measurements_json = json.dumps(monthly_measurements, default=_json_serializer, indent=2)
+            monthly_measurements = self.api_client.get_monthly_measurements_by_year(
+                year
+            )
+            monthly_measurements_json = json.dumps(
+                monthly_measurements, default=_json_serializer, indent=2
+            )
             print(monthly_measurements_json)
         except Exception as e:
             logging.error(f"Error getting monthly measurements: {e}")
@@ -123,8 +142,12 @@ class CarunaPlusCLIPrompt(Cmd):
         """Get the monthly electricity measurements of the previous year as JSON"""
         try:
             year = date.today().year - 1
-            monthly_measurements = self.api_client.get_monthly_measurements_by_year(year)
-            monthly_measurements_json = json.dumps(monthly_measurements, default=_json_serializer, indent=2)
+            monthly_measurements = self.api_client.get_monthly_measurements_by_year(
+                year
+            )
+            monthly_measurements_json = json.dumps(
+                monthly_measurements, default=_json_serializer, indent=2
+            )
             print(monthly_measurements_json)
         except Exception as e:
             logging.error(f"Error getting monthly measurements: {e}")
@@ -142,8 +165,12 @@ class CarunaPlusCLIPrompt(Cmd):
             month = current_month - 1
 
         try:
-            daily_measurements = self.api_client.get_daily_measurements_for_month(year, month)
-            daily_measurements_json = json.dumps(daily_measurements, default=_json_serializer, indent=2)
+            daily_measurements = self.api_client.get_daily_measurements_for_month(
+                year, month
+            )
+            daily_measurements_json = json.dumps(
+                daily_measurements, default=_json_serializer, indent=2
+            )
             print(daily_measurements_json)
         except Exception as e:
             logging.error(f"Error getting daily measurements: {e}")
@@ -154,8 +181,12 @@ class CarunaPlusCLIPrompt(Cmd):
         month = date.today().month
 
         try:
-            daily_measurements = self.api_client.get_daily_measurements_for_month(year, month)
-            daily_measurements_json = json.dumps(daily_measurements, default=_json_serializer, indent=2)
+            daily_measurements = self.api_client.get_daily_measurements_for_month(
+                year, month
+            )
+            daily_measurements_json = json.dumps(
+                daily_measurements, default=_json_serializer, indent=2
+            )
             print(daily_measurements_json)
         except Exception as e:
             logging.error(f"Error getting daily measurements: {e}")
@@ -164,7 +195,9 @@ class CarunaPlusCLIPrompt(Cmd):
         """Get all your contracts as JSON (includes terminated contracts)"""
         try:
             contract_data_json = self.api_client.get_meteringpoint_data_json()
-            contract_data_json_pretty = json.dumps(contract_data_json, default=_json_serializer, indent=2)
+            contract_data_json_pretty = json.dumps(
+                contract_data_json, default=_json_serializer, indent=2
+            )
             print(contract_data_json_pretty)
         except Exception as e:
             logging.error(f"Error getting metering point data: {e}")
@@ -209,6 +242,7 @@ class CarunaPlusCLIPrompt(Cmd):
         except Exception as e:
             logging.error(f"Error getting all GSRN ids: {e}")
 
+
 def main():
     """Main function to start the CLI"""
     print("Log in to Caruna Plus")
@@ -227,6 +261,7 @@ def main():
         CarunaPlusCLIPrompt(username, password).cmdloop()
     except Exception as e:
         logging.error(f"Failed to start CLI: {e}")
+
 
 if __name__ == "__main__":
     main()
