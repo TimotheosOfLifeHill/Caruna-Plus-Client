@@ -64,37 +64,6 @@ class CarunaPlusCLIPrompt(Cmd):
             print("Please provide proper start and end dates in format 'YYYY-mm-dd'")
             return None, None
 
-    def do_calculate_transfer_fees_between_dates(self, input=None):
-        """Calculate the transfer fees between a start date and an end date"""
-        if input is None:
-            print("Please provide proper start and end dates in format 'YYYY-mm-dd'")
-            return
-
-        start_date, end_date = self._parse_dates(input)
-        if not start_date or not end_date:
-            return
-
-        try:
-            price = self.api_client.calculate_transfer_fees_between_dates(start_date, end_date)
-            print(price)
-        except Exception as e:
-            logging.error(f"Error calculating transfer fees: {e}")
-
-    def do_calculate_spot_cost_between_dates(self, input=None):
-        """Calculate the price of your Exchange Electricity (spot) contract between a start date and an end date"""
-        if input is None:
-            print("Please provide proper start and end dates in format 'YYYY-mm-dd'")
-            return
-
-        start_date, end_date = self._parse_dates(input)
-        if not start_date or not end_date:
-            return
-
-        try:
-            price = self.api_client.calculate_total_costs_by_spot_prices_between_dates(start_date, end_date)
-            print(price)
-        except Exception as e:
-            logging.error(f"Error calculating spot cost: {e}")
 
     def do_calculate_the_impact_of_usage_between_dates(self, input=None):
         """Calculate the impact of usage for Caruna Plus Smart Electricity Guarantee contract between a start date and an end date"""
@@ -117,16 +86,9 @@ class CarunaPlusCLIPrompt(Cmd):
         try:
             end_date = datetime.today().date()
             start_date = end_date - timedelta(days=5)
-            monthly_measurements = self.api_client.get_hourly_measurements_between_dates(start_date, end_date)
-            measurements_with_total_consumption = [m for m in monthly_measurements if "totalConsumption" in m]
-            valid_measurements = [m for m in measurements_with_total_consumption if m["statuses"]["totalConsumption"] == 150]
-
-            if valid_measurements:
-                latest_measurement = max(valid_measurements, key=lambda m: m["timestamp"])
-                latest_measurement_json = json.dumps(latest_measurement, default=_json_serializer, indent=2)
-                print(latest_measurement_json)
-            else:
-                print("No valid measurements found")
+            latest_hourly_monthly_measurement = self.api_client.get_hourly_measurements_between_dates(start_date, end_date)
+            latest_measurement_json = latest_hourly_monthly_measurement
+            print(latest_measurement_json)
         except Exception as e:
             logging.error(f"Error getting monthly measurements: {e}")
 
@@ -216,30 +178,6 @@ class CarunaPlusCLIPrompt(Cmd):
         except Exception as e:
             logging.error(f"Error getting exchange margin price: {e}")
 
-    def do_get_contract_base_price(self, input=None):
-        """Helper to get the contract base price from your contract data. To see the whole contract data as JSON, use get_meteringpoint_data_json"""
-        try:
-            base_price = self.api_client.get_contract_base_price()
-            print(base_price)
-        except Exception as e:
-            logging.error(f"Error getting contract base price: {e}")
-
-    def do_get_contract_transfer_fee(self, input=None):
-        """Helper to get the transfer fee price from your contract data. To see the whole contract data as JSON, use get_meteringpoint_data_json"""
-        try:
-            base_price = self.api_client.get_transfer_fee()
-            print(base_price)
-        except Exception as e:
-            logging.error(f"Error getting contract transfer fee: {e}")
-
-    def do_get_contract_transfer_base_price(self, input=None):
-        """Helper to get the transfer base price from your contract data. To see the whole contract data as JSON, use get_meteringpoint_data_json"""
-        try:
-            base_price = self.api_client.get_transfer_base_price()
-            print(base_price)
-        except Exception as e:
-            logging.error(f"Error getting contract transfer base price: {e}")
-
     def do_get_api_access_token(self, input=None):
         """Get your access token for the Caruna Plus API."""
         try:
@@ -247,14 +185,6 @@ class CarunaPlusCLIPrompt(Cmd):
             print(access_token)
         except Exception as e:
             logging.error(f"Error getting API access token: {e}")
-
-    def do_get_contract_energy_unit_price(self, input=None):
-        """Helper to get the energy unit price from your contract data. To see the whole contract data as JSON, use get_meteringpoint_data_json"""
-        try:
-            contract_energy_unit_price = self.api_client.get_contract_energy_unit_price()
-            print(contract_energy_unit_price)
-        except Exception as e:
-            logging.error(f"Error getting contract energy unit price: {e}")
 
     def do_select_delivery_site(self, input=None):
         """Select a delivery site to be used in the api_client."""

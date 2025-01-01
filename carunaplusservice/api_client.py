@@ -1,17 +1,17 @@
 from typing import List
 import requests
 from cachetools import cached, TTLCache
-import json, logging
+import json
+import logging
 from datetime import date, datetime, timedelta
 from collections import defaultdict
 
 from carunaplusservice.api_exceptions import InvalidApiResponseException
-from .api_response import MeasurementResponse, SpotPricesResponse
+from .api_response import MeasurementResponse
 from .const import HTTP_READ_TIMEOUT,BASE_URL
 from .carunaplus_session import CarunaPlusSession
 from requests import get
 from dateutil.relativedelta import relativedelta
-from itertools import groupby
 import time
 
 # TODO: consider moving all calculation functions somewhere else - they are not related to CarunaPlusApiClient
@@ -25,6 +25,11 @@ class CarunaPlusApiClient:
     _selected_contract = None
     _all_active_contracts = None
 
+    def _json_serializer(value):
+      if isinstance(value, datetime):
+         return value.strftime("%Y%m%d%H%M%S")
+      else:
+            return value.__dict__
 
     def parse_hourly_measurements(self, response_json_text: str):
         """Parse the hourly measurements JSON response from Caruna Plus API."""
@@ -96,43 +101,7 @@ class CarunaPlusApiClient:
             # hourly_price_with_tax_and_margin = hourly_price.value+self._margin
             hourly_consumption_costs.append((abs(hourly_measurement["totalConsumption"])))
         return hourly_consumption_costs
-
-    def calculate_transfer_fees_between_dates(self, start_date: date, end_date: date):
-        """Calculate your total transfer fee costs including the monthly base price
-
-        Returns the price in euros
-        """
-        total_consumption = self.get_total_consumption_between_dates(start_date, end_date)
-        #transfer_fee = self.get_transfer_fee()
-        #total_price = total_consumption * transfer_fee
-        total_price_in_euros = 1 #total_price/100 + self.get_transfer_base_price()
-        return total_price_in_euros
-    
-    def get_total_consumption_between_dates(self, start_date: date, end_date: date) -> float:
-            try:
-                daily_measurements_response = self.get_daily_measurements_between_dates(start_date, end_date)
-                daily_measurements = daily_measurements_response  # Assuming this is the JSON data list
-
-                # Filter valid measurements and sum the totalConsumption values
-                total_consumption = sum(
-                    measurement["totalConsumption"]
-                    for measurement in daily_measurements
-                    if measurement["statuses"]["totalConsumption"] == 150
-                )
-                return total_consumption
-            except Exception as err:
-                logging.error(f"Error occurred while getting total consumption: {err}")
-                return 0.0
-
-    def calculate_total_costs_by_spot_prices_between_dates(self, start_date: date, end_date: date):
-        """Calculate your total electricity cost with according spot prices by hourly precision
-
-        Returns the price in euros
-        """
-        hourly_consumption_costs = self._get_hourly_measurement_data_for_date(start_date, end_date)
-        total_price = sum(hourly_consumption_costs)
-        total_price_with_tax_in_euros = total_price*(1+self._tax)/100
-        return total_price_with_tax_in_euros
+   
 
     def calculate_impact_of_usage_between_dates(self, start_date: date, end_date: date) -> float:
         """Calculate the price impact of your usage based on hourly consumption and hourly spot prices
@@ -365,7 +334,15 @@ class CarunaPlusApiClient:
             # Introduce a delay to prevent flooding the API
             time.sleep(0.5)  # Delay for 0.5 second
 
-        return hourly_measurements
+        measurements_with_total_consumption = [m for m in hourly_measurements if "totalConsumption" in m]
+        valid_measurements = [m for m in measurements_with_total_consumption if m["statuses"]["totalConsumption"] == 150]
+
+        if valid_measurements:
+            latest_measurement = max(valid_measurements, key=lambda m: m["timestamp"])
+            latest_measurement_json = json.dumps(latest_measurement, default=self._json_serializer, indent=2)
+            return latest_measurement_json 
+
+        return None
     
     @cached(cache=TTLCache(maxsize=2, ttl=3600))
     def get_meteringpoint_data_json(self):
@@ -421,23 +398,6 @@ class CarunaPlusApiClient:
         self._invalidate_caches()
         logging.warning(f"Delivery site set to '{delivery_site_id}'")
 
-    def get_contract_base_price(self) -> float:
-        """Get the contract base price from your contract data."""
-
-        self._refresh_api_client_state()
-        contract = self._selected_contract
-        if not contract: raise InvalidApiResponseException("Contract data is empty or None")
-        products = contract["products"] if contract else []
-        product = next(filter(lambda p: p["product_type"] == "energy", products), None) 
-        if not product: 
-            logging.warning("Could not resolve contract base price from Caruna Plus API response. Returning 0.0")
-            return 0.0
-        components = product["components"] if product else []
-        base_price_component = next(filter(lambda component: component["is_base_price"], components), None)
-        if not base_price_component: 
-            logging.warning("Could not resolve contract base price from Caruna Plus API response. Returning 0.0")
-            return 0.0
-        return base_price_component["price"]
     
     def get_contract_energy_unit_price(self) -> float:
         """
