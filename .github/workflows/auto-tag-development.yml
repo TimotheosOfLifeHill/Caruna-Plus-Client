@@ -3,7 +3,7 @@ name: Auto Tag on Development Branch
 on:
   push:
     branches:
-      - development
+      - development-notused
 
 jobs:
   create-tag:
