@@ -5,4 +5,7 @@ soupsieve==2.5
 urllib3>=1.26.5
 cachetools>=5.3.3
 groupby>=0.1.0
-keyring>=23.0.1
+keyring>=23.0.1,
+setuptools,
+wheel,
+twine

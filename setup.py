@@ -14,15 +14,17 @@ requirements = [
     'requests>=2.28.1',
     'soupsieve==2.5',
     'urllib3==1.26.5',
-    'cachetools>=5.3.3'
+    'cachetools>=5.3.3',
+    'groupby>=0.1.0',
+    'keyring>=23.0.1'
     ]
 
 setup(
-    author="carohauta",
-    author_email='carosoft.dev@gmail.com',
+    author="TimotheosOfLifeHill",
+    author_email='timo.elovaara@gmail.com',
     python_requires='>=3.6',
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'License :: OSI Approved :: MIT License',
@@ -49,7 +51,7 @@ setup(
     long_description_content_type='text/markdown',
     include_package_data=True,
     packages=find_packages(include=['carunaplusservice', 'carunaplusservice.*']),
-    url='https://github.com/carohauta/caruna-plus-cli',
+    url='https://github.com/TimotheosOfLifeHill/Caruna-Plus-Client',
     version='1.3.1',
     zip_safe=False,
 )
