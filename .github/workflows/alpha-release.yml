@@ -1,4 +1,4 @@
-name: Create Alpha Release
+name: Publish Alpha Release
 
 on:
   push:
