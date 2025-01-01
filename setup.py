@@ -52,6 +52,6 @@ setup(
     include_package_data=True,
     packages=find_packages(include=['carunaplusservice', 'carunaplusservice.*']),
     url='https://github.com/TimotheosOfLifeHill/Caruna-Plus-Client',
-    version='1.3.1',
+    version='0.0.3-alpha',
     zip_safe=False,
 )
