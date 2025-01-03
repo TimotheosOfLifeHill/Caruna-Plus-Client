@@ -2,11 +2,9 @@ import json
 import logging
 from cmd import Cmd
 from datetime import date, datetime, timedelta
-from getpass import getpass
-
-import keyring
 
 from .api_client import CarunaPlusApiClient
+from .keyring_manager import KeyringManager
 from .price_client import CarunaPlusPriceClient
 
 # Configure logging
@@ -29,19 +27,12 @@ class CarunaPlusCLIPrompt(Cmd):
     carunaplus_price_client = CarunaPlusPriceClient()
     tax = 0.255  # 25.5%
     api_client = CarunaPlusApiClient(tax)
+    keyring_manager = KeyringManager("caruna-plus-cli")
 
     def __init__(self, username=None, password=None):
         super(CarunaPlusCLIPrompt, self).__init__()
-        self.username = username or keyring.get_password("caruna-plus-cli", "username")
-        self.password = password or keyring.get_password("caruna-plus-cli", "password")
-
-        if not self.username:
-            self.username = input("Username: ")
-            keyring.set_password("caruna-plus-cli", "username", self.username)
-
-        if not self.password:
-            self.password = getpass("Password: ")
-            keyring.set_password("caruna-plus-cli", "password", self.password)
+        self.username = username
+        self.password = password
 
         try:
             self.api_client.login_and_init(self.username, self.password)
@@ -242,20 +233,17 @@ class CarunaPlusCLIPrompt(Cmd):
         except Exception as e:
             logging.error(f"Error getting all GSRN ids: {e}")
 
+    def do_clear_credentials(self, input=None):
+        """Clear stored username and password and prompt for new credentials."""
+        self.keyring_manager.clear_credentials()
+        print("Credentials cleared. Please restart the CLI to set new credentials.")
+
 
 def main():
     """Main function to start the CLI"""
     print("Log in to Caruna Plus")
-    username = keyring.get_password("caruna-plus-cli", "username")
-    password = keyring.get_password("caruna-plus-cli", "password")
-
-    if not username:
-        username = input("Username: ")
-        keyring.set_password("caruna-plus-cli", "username", username)
-
-    if not password:
-        password = getpass("Password: ")
-        keyring.set_password("caruna-plus-cli", "password", password)
+    keyring_manager = KeyringManager("caruna-plus-cli")
+    username, password = keyring_manager.prompt_for_credentials()
 
     try:
         CarunaPlusCLIPrompt(username, password).cmdloop()
